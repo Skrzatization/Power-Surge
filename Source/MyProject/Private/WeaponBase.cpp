@@ -21,21 +21,21 @@ AWeaponBase::AWeaponBase()
 	// Create laser sight
 	VisualLaserCone = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualLaserCone"));
 	VisualLaserCone->SetupAttachment(WeaponMesh);
+	VisualLaserCone->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// properties
 	WeaponName = "DefaultWeapon";
-	AmmoCount = 10000;
-	Damage = 10.0f;
-	FireRate = 10.0f;
+	//AmmoCount = 10000;
+	//Damage = 10.0f;
+	//FireRate = 10.0f;
 	LastFireTime = 0.0f;
-	TimeBetweenShots = 2.0f / FireRate;
 	bIsAiming = false;
-	BaseRadius = 310.0f;
-	MinBaseRadius = 200.0f;
-	Height = 1000.0f;
-	ConeShrinkSpeed = 5.0f;
-	CurrentBaseRadius = BaseRadius;
-	MaxRange = 10000.0f;
+	//BaseRadius = 310.0f;
+	//MinBaseRadius = 200.0f;
+	//Height = 1000.0f;
+	//ConeShrinkSpeed = 5.0f;
+	//CurrentBaseRadius;
+	//MaxRange = 10000.0f;
 }
 
 // Called when the game starts or when spawned
@@ -60,11 +60,24 @@ void AWeaponBase::Tick(float DeltaTime)
 		float ScaleZ = CurrentBaseRadius / 200.0f;
 		float ScaleY = Height / 100.0f;
 		VisualLaserCone->SetWorldScale3D(FVector(ScaleX, ScaleY, ScaleZ));
+		//VisualLaserCone->AddRelativeRotation(FRotator(1.0f, 0.0f, 0.0f));
+		VisualLaserCone->AddLocalRotation(FRotator(1.0f, 0.0f, 0.0f));
+		/*
+		FRotator CurrentRotation = VisualLaserCone->GetRelativeRotation();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("ConeRotation: %f"), CurrentRotation.Pitch));
+		if (CurrentRotation.Pitch >= 90.0f || CurrentRotation.Pitch <= -90.0f)
+		{
+			VisualLaserCone->SetRelativeRotation(FRotator(1.0f, CurrentRotation.Yaw, CurrentRotation.Roll));
+		}
+		*/
+		
 	}
 }
 
 void AWeaponBase::Fire()
 {
+	TimeBetweenShots = 2.0f / FireRate;
+
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("FIRE C++")));
 	if (!bIsAiming)
 	{
@@ -83,13 +96,14 @@ void AWeaponBase::Fire()
 
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	UE_LOG(LogTemp, Warning, TEXT("CurrentTime: %f, LastFireTime: %f, TimeBetweenShots: %f"), CurrentTime, LastFireTime, TimeBetweenShots);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CurrentTime: %f, LastFireTime: %f, TimeBetweenShots: %f, Delta: %f, AmmoCount: %f"), CurrentTime, LastFireTime, TimeBetweenShots, CurrentTime - LastFireTime, AmmoCount));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CurrentTime: %f, LastFireTime: %f, TimeBetweenShots: %f, Delta: %f, FIRERATE: %f"), CurrentTime, LastFireTime, TimeBetweenShots, CurrentTime - LastFireTime, FireRate));
 	if (CurrentTime - LastFireTime > TimeBetweenShots)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("FIRE CHECK TIME")));
 		HandleFire();
 		LastFireTime = CurrentTime;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &AWeaponBase::HandleFire, TimeBetweenShots, false);
+		CurrentBaseRadius += Recoil;
+		//GetWorld()->GetTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &AWeaponBase::HandleFire, TimeBetweenShots, false);
 	}
 }
 
